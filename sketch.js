@@ -1,4 +1,4 @@
-let mobilenet;
+
 let video;
 let label = '';
 let myFont;
@@ -6,7 +6,6 @@ let facemesh;
 let predictions = [];
 let aspectX = 1.0;
 let aspectY = 1.0;
-let poseNet;
 
 let noseX = 0;
 let noseY = 0;
@@ -21,6 +20,17 @@ let earrY = 0;
 
 const devices = [];
 
+let useMobilenet = false;
+let usePosenet = true;
+
+if (useMobilenet) {
+  let mobilenet;
+}
+
+if (usePosenet) {
+  let poseNet;
+}
+
 let showBBox = true;
 let showDots = true;
 let showPolygons = true;
@@ -31,7 +41,7 @@ function preload() {
 
 function setup() {
   // createCanvas(windowWidth, windowHeight, WEBGL);
-  console.log('Using ml5 version:', ml5.version);
+  
   createCanvas(windowWidth, windowHeight);
   // let fs = fullscreen();
   //   fullscreen(!fs);
@@ -41,15 +51,21 @@ function setup() {
   aspectY = windowHeight / video.height;
   console.log(aspectX, aspectY);
   // video.size(width, height);
-  facemesh = ml5.facemesh(video, modelReady);
-  facemesh.on("predict", results => {
-    predictions = results;
-  });
-  poseNet = ml5.poseNet(video, modelReady);
-  poseNet.on('pose', gotPoses);
+  if (useMobilenet) {
+    console.log('Using ml5 version:', ml5.version);
+    facemesh = ml5.facemesh(video, mobilenetModelReady);
+    facemesh.on("predict", results => {
+      predictions = results;
+    });
+    // mobilenet = ml5.imageClassifier('MobileNet', video, modelReady);
+  }
+  if (usePosenet) {
+    poseNet = ml5.poseNet(video, posenetModelReady);
+    poseNet.on('pose', gotPoses);
+  }
   video.hide();
   background(0);
-  // mobilenet = ml5.imageClassifier('MobileNet', video, modelReady);
+  
   fill('#ED225D');
   textFont(myFont);
   textSize(36);
@@ -60,13 +76,17 @@ function draw() {
   image(video, 0, 0, width, height);
   filter(GRAY);
   // image(video, 0, 0);
-  drawKeypoints();
+  if (useMobilenet) {
+    drawKeypoints();
+  }
   fill(255);
   textSize(32);
   text(label, 10, height - 20);
 
-  if (showPolygons === true) {
-    drawFaceFeatures();
+  if (usePosenet) {
+    if (showPolygons === true) {
+      drawFaceFeatures();
+    }
   }
   
 }
@@ -184,9 +204,13 @@ rightShoulder:
 rightWrist: 
 */
 
-function modelReady() {
-  console.log('Model is ready!!!');
-  // mobilenet.predict(gotResults);
+function mobilenetModelReady() {
+  console.log('Mobilenet model is ready!!!');
+  mobilenet.predict(gotResults);
+}
+
+function posenetModelReady() {
+  console.log('Posenet model is ready!!!');
 }
 
 function gotResults(error, results) {
@@ -195,7 +219,7 @@ function gotResults(error, results) {
   } else {
     // console.log(results);
     label = results[0].className;
-    // mobilenet.predict(gotResults);
+    mobilenet.predict(gotResults);
   }
 }
 
@@ -232,12 +256,18 @@ function gotPoses(poses) {
     let elY = poses[0].pose.keypoints[1].position.y;
     let erX = poses[0].pose.keypoints[2].position.x;
     let erY = poses[0].pose.keypoints[2].position.y;
-    noseX = lerp(noseX, nX, 0.5);
-    noseY = lerp(noseY, nY, 0.5);
-    eyelX = lerp(eyelX, elX, 0.5);
-    eyelY = lerp(eyelY, elY, 0.5);
-    eyerX = lerp(eyerX, erX, 0.5);
-    eyerY = lerp(eyerY, erY, 0.5);
+    // noseX = lerp(noseX, nX, 0.5);
+    // noseY = lerp(noseY, nY, 0.5);
+    // eyelX = lerp(eyelX, elX, 0.5);
+    // eyelY = lerp(eyelY, elY, 0.5);
+    // eyerX = lerp(eyerX, erX, 0.5);
+    // eyerY = lerp(eyerY, erY, 0.5);
+    noseX = nX;
+    noseY = nY;
+    eyelX = elX;
+    eyelY = elY;
+    eyerX = erX;
+    eyerY = erY;
   }
 }
 
